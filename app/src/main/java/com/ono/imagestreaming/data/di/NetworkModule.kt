@@ -17,7 +17,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://run.mocky.io/")
+            .baseUrl("https://file.io/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

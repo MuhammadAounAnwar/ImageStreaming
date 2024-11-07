@@ -6,6 +6,7 @@ import com.ono.imagestreaming.data.local.entity.ImageEntity
 import com.ono.imagestreaming.data.remote.ApiService
 import com.ono.imagestreaming.domain.repository.ImageRepository
 import com.ono.imagestreaming.util.createFileFromPath
+import kotlinx.coroutines.flow.Flow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -49,7 +50,8 @@ class ImageRepositoryImpl @Inject constructor(
             val response = apiService.uploadImage(fileToUpload)
 
             if (response.isSuccessful) {
-                updateImageStatus("completed", filePath)
+                Log.d(TAG, "uploadImage: Successfully uploaded image")
+                updateImageStatus("uploaded", filePath)
                 true // Return true if upload is successful
             } else {
                 Log.e(TAG, "Image upload failed with response code: ${response.code()}")
@@ -62,9 +64,13 @@ class ImageRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getImagesByStatus(imageStatus: String): List<ImageEntity> {
+        return imageDao.getImagesByStatus(imageStatus)
+    }
 
-    override suspend fun getPendingImages(): List<ImageEntity> {
-        return imageDao.getImagesByStatus("pending")
+
+    override suspend fun getPendingImages(): Flow<List<ImageEntity>> {
+        return imageDao.getPendingImages()
     }
 
     override suspend fun updateImageStatus(status: String, filePath: String): Boolean {

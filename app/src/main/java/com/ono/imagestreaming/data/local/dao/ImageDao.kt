@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.ono.imagestreaming.data.local.entity.ImageEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ImageDao {
@@ -15,9 +16,13 @@ interface ImageDao {
     @Query("SELECT * FROM images WHERE status = :status")
     suspend fun getImagesByStatus(status: String): List<ImageEntity>
 
+    @Query("SELECT * FROM images WHERE status = 'pending'")
+    fun getPendingImages(): Flow<List<ImageEntity>>
+
     @Update
     suspend fun updateImage(image: ImageEntity)
 
     @Query("UPDATE images SET status = :status WHERE filePath = :filePath")
-    suspend fun updateImageStatus(status: String, filePath: String) : Int
+    suspend fun updateImageStatus(status: String, filePath: String): Int
 }
+

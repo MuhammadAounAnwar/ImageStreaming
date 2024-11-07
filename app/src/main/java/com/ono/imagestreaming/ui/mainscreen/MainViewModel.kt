@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ono.imagestreaming.domain.repository.ImageRepository
 import com.ono.imagestreaming.domain.usecase.UploadImageUseCase
+import com.ono.imagestreaming.ui.service.UploadService
 import com.ono.imagestreaming.util.isInternetAvailable
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,22 +29,15 @@ class MainViewModel @Inject constructor(
 
 
     init {
-        getPendingImages()
+        getImagesStats()
+        observePendingImages()
     }
 
     fun captureAndUploadImage(filePath: String) {
         viewModelScope.launch {
             try {
-                // Save image locally
                 repository.saveImageLocally(filePath)
-                Log.d(TAG, "Image saved locally: $filePath")
-
-                // Check internet availability
-                if (context.isInternetAvailable()) {
-                    uploadImage(filePath)
-                } else {
-                    _uploadState.value = "No internet connection. Upload failed."
-                }
+//                Log.d(TAG, "Image saved locally: $filePath")
             } catch (e: Exception) {
                 Log.e(TAG, "Error in captureAndUploadImage: ${e.message}")
                 _uploadState.value = "An error occurred: ${e.message}"
@@ -51,27 +45,38 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private suspend fun uploadImage(filePath: String) {
-        val uploadResult = runCatching {
-            uploadImageUseCase(filePath)
-        }
+    private fun observePendingImages() {
+        viewModelScope.launch {
+            repository.getPendingImages().collect { pendingImages ->
+                Log.d(TAG, "observePendingImages: ${pendingImages.size}")
+                if (pendingImages.isNotEmpty()) {
+                    startUploadService(context, pendingImages.map { it.filePath })
+                }
 
-        // Update the state based on the result
-        _uploadState.value = uploadResult.fold(
-            onSuccess = { success ->
-                if (success) "Upload Successful" else "Upload Failed"
-            },
-            onFailure = { exception ->
-                "Upload Failed: ${exception.message}"
+
             }
-        )
+        }
     }
 
-    private fun getPendingImages() {
+    private fun getImagesStats() {
         viewModelScope.launch {
-            val pendingImages = repository.getPendingImages()
-            Log.d(TAG, "getPendingImages: $pendingImages")
+            val pendingImages = repository.getImagesByStatus("pending")
+            Log.d(TAG, "getPendingImages: ${pendingImages.size}")
+            val uploadedImages = repository.getImagesByStatus("uploaded")
+            Log.d(TAG, "getUploadedImages: ${uploadedImages.size}")
         }
+    }
+
+    fun startUploadService(context: Context, imagePaths: List<String>) {
+        UploadService.startService(context, imagePaths)
+    }
+
+    fun togglePauseResume(context: Context) {
+        UploadService.pauseOrResumeService(context)
+    }
+
+    fun cancelUploadService(context: Context) {
+        UploadService.cancelService(context)
     }
 
 }

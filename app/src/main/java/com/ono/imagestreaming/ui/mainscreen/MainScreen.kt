@@ -9,9 +9,11 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,8 +43,7 @@ fun MainScreen(modifier: Modifier, viewModel: MainViewModel = hiltViewModel()) {
     val captureImage = {
         val file = File(outputDirectory, "${System.currentTimeMillis()}.jpg")
         val outputOptions = ImageCapture.OutputFileOptions.Builder(file).build()
-        imageCapture.takePicture(
-            outputOptions,
+        imageCapture.takePicture(outputOptions,
             Executors.newSingleThreadExecutor(),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
@@ -52,8 +53,7 @@ fun MainScreen(modifier: Modifier, viewModel: MainViewModel = hiltViewModel()) {
                 override fun onError(exception: ImageCaptureException) {
                     Log.e("CameraX", "Error capturing image", exception)
                 }
-            }
-        )
+            })
     }
 
     DisposableEffect(context) {
@@ -63,10 +63,7 @@ fun MainScreen(modifier: Modifier, viewModel: MainViewModel = hiltViewModel()) {
         try {
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                cameraSelector,
-                preview,
-                imageCapture
+                lifecycleOwner, cameraSelector, preview, imageCapture
             )
 
             preview.surfaceProvider = previewView.surfaceProvider
@@ -80,21 +77,31 @@ fun MainScreen(modifier: Modifier, viewModel: MainViewModel = hiltViewModel()) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween
     ) {
         AndroidView(
-            factory = { previewView },
-            modifier = Modifier.weight(1f)
+            factory = { previewView }, modifier = Modifier.weight(1f)
         )
 
-        Button(
-            onClick = captureImage,
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+                .wrapContentHeight()
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Capture Image")
+            Button(onClick = captureImage) {
+                Text("Capture")
+            }
+
+            Button(onClick = { viewModel.togglePauseResume(context) }) {
+                Text("Pause/Resume")
+            }
+
+            Button(onClick = { viewModel.cancelUploadService(context) }) {
+                Text("Cancel")
+            }
         }
+
+
     }
 }

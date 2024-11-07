@@ -94,7 +94,12 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.camera.camera2)
 
+//    Permission
     implementation(libs.accompanist.permissions)
+
+//    Service
+    implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.work.runtime.ktx)
 
 
 //    Test
