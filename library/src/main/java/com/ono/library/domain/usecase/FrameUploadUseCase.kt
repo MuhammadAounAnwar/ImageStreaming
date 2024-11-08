@@ -1,0 +1,7 @@
+package com.ono.library.domain.usecase
+
+import com.ono.imagestreaming.domain.model.FrameModel
+
+interface FrameUploadUseCase {
+    suspend operator fun invoke(frameId: Int): Boolean
+}

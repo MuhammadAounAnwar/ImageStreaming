@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ImageStreaming"
 include(":app")
- 
+include(":library")
