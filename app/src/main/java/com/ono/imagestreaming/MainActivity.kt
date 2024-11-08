@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.app.NotificationManagerCompat
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.ono.imagestreaming.ui.imagestream.ImageStream
 import com.ono.imagestreaming.ui.mainscreen.MainScreen
 import com.ono.imagestreaming.ui.mainscreen.MainViewModel
 import com.ono.imagestreaming.ui.theme.ImageStreamingTheme
@@ -42,19 +43,20 @@ class MainActivity : ComponentActivity() {
                     RequestPermissionsScreen(
                         multiplePermissionsState = multiplePermissionsState,
                         onPermissionsGranted = {
-                           /* if (hasNotificationPermission()) {
-                                MainScreen(
-                                    modifier = Modifier.padding(innerPadding),
-                                    viewModel = viewModel
-                                )
-                            } else {
-                                requestNotificationPermission()
-                            }*/
+                            /* if (hasNotificationPermission()) {
+                                 MainScreen(
+                                     modifier = Modifier.padding(innerPadding),
+                                     viewModel = viewModel
+                                 )
+                             } else {
+                                 requestNotificationPermission()
+                             }*/
 
-                            MainScreen(
+                            /*MainScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 viewModel = viewModel
-                            )
+                            )*/
+                            ImageStream()
                         }
                     )
                 }
