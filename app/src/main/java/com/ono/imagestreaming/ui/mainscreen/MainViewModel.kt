@@ -5,9 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ono.imagestreaming.domain.repository.ImageRepository
-import com.ono.imagestreaming.domain.usecase.UploadImageUseCase
 import com.ono.imagestreaming.ui.service.UploadService
-import com.ono.imagestreaming.util.isInternetAvailable
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +16,6 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: ImageRepository,
-    private val uploadImageUseCase: UploadImageUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -52,8 +49,6 @@ class MainViewModel @Inject constructor(
                 if (pendingImages.isNotEmpty()) {
                     startUploadService(context, pendingImages.map { it.filePath })
                 }
-
-
             }
         }
     }

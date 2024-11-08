@@ -3,6 +3,7 @@ package com.ono.imagestreaming.data.di
 import android.app.Application
 import androidx.room.Room
 import com.ono.imagestreaming.data.local.AppDatabase
+import com.ono.imagestreaming.data.local.dao.FrameDao
 import com.ono.imagestreaming.data.local.dao.ImageDao
 import dagger.Module
 import dagger.Provides
@@ -22,5 +23,9 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideUserDao(db: AppDatabase): ImageDao = db.imageDao()
+    fun provideImageDao(db: AppDatabase): ImageDao = db.imageDao()
+
+    @Provides
+    @Singleton
+    fun provideFrameDao(db: AppDatabase): FrameDao = db.frameDao()
 }
