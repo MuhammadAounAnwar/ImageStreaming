@@ -1,20 +1,14 @@
 package com.ono.imagestreaming.ui.imagestream
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.ImageFormat
-import android.graphics.Rect
-import android.graphics.YuvImage
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ono.imagestreaming.data.local.entity.toDomainModel
+import com.ono.imagestreaming.data.local.entity.toDomainModelIds
 import com.ono.imagestreaming.domain.model.FrameModel
 import com.ono.imagestreaming.domain.repository.FrameRepository
 import com.ono.imagestreaming.ui.service.FrameUploadService
-import com.ono.imagestreaming.ui.service.UploadService
 import com.ono.imagestreaming.util.bitmapToByteArray
 import com.ono.imagestreaming.util.compressBitmap
 import com.ono.imagestreaming.util.convertImageToBitmap
@@ -27,7 +21,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,6 +37,7 @@ class ImageStreamViewModel @Inject constructor(
 
 
     init {
+        getFramesStats()
         observePendingFrames()
     }
 
@@ -53,9 +47,6 @@ class ImageStreamViewModel @Inject constructor(
             val resizedBitmap = bitmap.resizeBitmap(600, 400)
             val byteArray = resizedBitmap.bitmapToByteArray()
             val compressedByteArray = resizedBitmap.compressBitmap()
-
-            Log.d(TAG, "processImage: ${byteArray.size}")
-            Log.d(TAG, "processImage: ${compressedByteArray.size}")
 
             saveFrameLocally(compressedByteArray)
         }
@@ -79,23 +70,37 @@ class ImageStreamViewModel @Inject constructor(
                 Log.d(TAG, "observePendingImages: ${pendingFrames.size}")
                 if (pendingFrames.isNotEmpty()) {
                     context.isInternetAvailable {
-                        startUploadService(context, pendingFrames.toDomainModel())
+                        context.startUploadService(pendingFrames.toDomainModelIds())
                     }
                 }
             }
         }
     }
 
-
-    private fun startUploadService(context: Context, imagePaths: List<FrameModel>) {
-        FrameUploadService.startService(context, imagePaths)
+    private fun getFramesStats() {
+        viewModelScope.launch {
+            val pendingFrames = repository.getFramesByStatus("pending")
+            Log.d(TAG, "Pending Frames: ${pendingFrames.size}")
+            val uploadedFrames = repository.getFramesByStatus("uploaded")
+            Log.d(TAG, "UploadedS Frames: ${uploadedFrames.size}")
+        }
     }
 
-    fun togglePauseResume(context: Context) {
-        FrameUploadService.pauseOrResumeService(context)
-    }
 
-    fun cancelUploadService(context: Context) {
-        FrameUploadService.cancelService(context)
-    }
+}
+
+fun Context.startUploadServiceWithFrames(imagePaths: List<FrameModel>) {
+    FrameUploadService.startServiceWithFrames(this, imagePaths)
+}
+
+fun Context.startUploadService(imagePaths: List<Int>) {
+    FrameUploadService.startService(this, imagePaths)
+}
+
+fun Context.togglePauseResume() {
+    FrameUploadService.pauseOrResumeService(this)
+}
+
+fun Context.cancelUploadService() {
+    FrameUploadService.cancelService(this)
 }

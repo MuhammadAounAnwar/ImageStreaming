@@ -70,12 +70,16 @@ class FrameRepositoryImpl @Inject constructor(
         return frameDao.getPendingFrames()
     }
 
+    override suspend fun getFrameById(id: Int): FrameModel {
+        return frameDao.getFrameById(id).toDomainModel()
+    }
+
     override suspend fun updateFrameStatus(status: String, id: Int): Boolean {
         Log.d(TAG, "updateImageStatus: $status $id")
         return frameDao.updateFrameStatus(status, id) > 0
     }
 
-    fun createRequestBody(byteArray: ByteArray): RequestBody {
+    private fun createRequestBody(byteArray: ByteArray): RequestBody {
         return byteArray.toRequestBody("image/jpeg".toMediaTypeOrNull(), 0, byteArray.size)
     }
 

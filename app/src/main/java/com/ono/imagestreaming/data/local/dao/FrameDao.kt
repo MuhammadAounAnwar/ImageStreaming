@@ -25,4 +25,7 @@ interface FrameDao {
 
     @Query("UPDATE frames SET status = :status WHERE id = :id")
     suspend fun updateFrameStatus(status: String, id: Int): Int
+
+    @Query("SELECT * FROM frames WHERE id = :id")
+    suspend fun getFrameById(id: Int): FrameEntity
 }

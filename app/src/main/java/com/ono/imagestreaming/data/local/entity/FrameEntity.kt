@@ -6,9 +6,7 @@ import com.ono.imagestreaming.domain.model.FrameModel
 
 @Entity(tableName = "frames")
 data class FrameEntity(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val frameData: ByteArray,
-    val status: String
+    @PrimaryKey(autoGenerate = true) val id: Int = 0, val frameData: ByteArray, val status: String
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -38,3 +36,7 @@ fun FrameModel.toEntity() = FrameEntity(id, frameData, status)
 fun List<FrameEntity>.toDomainModel() = map { it.toDomainModel() }
 
 fun List<FrameModel>.toEntity() = map { it.toEntity() }
+
+fun List<FrameEntity>.toDomainModelIds() = map { it.toDomainModel() }.map { it.id }
+
+fun List<FrameModel>.getFramesIds() = map { it.id }

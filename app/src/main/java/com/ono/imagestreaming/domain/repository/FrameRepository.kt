@@ -10,4 +10,5 @@ interface FrameRepository {
     suspend fun getFramesByStatus(frameStatus: String): List<FrameModel>
     suspend fun updateFrameStatus(status: String, id: Int): Boolean
     suspend fun getPendingFrames(): Flow<List<FrameEntity>>
+    suspend fun getFrameById(id: Int): FrameModel
 }

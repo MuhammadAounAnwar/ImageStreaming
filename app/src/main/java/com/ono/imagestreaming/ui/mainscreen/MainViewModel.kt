@@ -24,7 +24,6 @@ class MainViewModel @Inject constructor(
     private val _uploadState = MutableStateFlow("")
     val uploadState: StateFlow<String> get() = _uploadState
 
-
     init {
         getImagesStats()
         observePendingImages()
@@ -34,7 +33,6 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.saveImageLocally(filePath)
-//                Log.d(TAG, "Image saved locally: $filePath")
             } catch (e: Exception) {
                 Log.e(TAG, "Error in captureAndUploadImage: ${e.message}")
                 _uploadState.value = "An error occurred: ${e.message}"
