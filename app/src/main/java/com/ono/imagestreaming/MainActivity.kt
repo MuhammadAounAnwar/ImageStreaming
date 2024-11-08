@@ -43,11 +43,13 @@ class MainActivity : ComponentActivity() {
                     RequestPermissionsScreen(
                         multiplePermissionsState = multiplePermissionsState,
                         onPermissionsGranted = {
-                            /* if (hasNotificationPermission()) {
+                             /*if (hasNotificationPermission()) {
                                  MainScreen(
                                      modifier = Modifier.padding(innerPadding),
                                      viewModel = viewModel
                                  )
+
+                                 ImageStream()
                              } else {
                                  requestNotificationPermission()
                              }*/

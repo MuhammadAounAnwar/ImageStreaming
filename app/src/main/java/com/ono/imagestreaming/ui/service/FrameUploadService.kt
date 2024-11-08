@@ -219,7 +219,6 @@ class FrameUploadService : LifecycleService() {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
 
-        // For Android 8.0 (API level 26) and above, create a notification channel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -235,6 +234,6 @@ class FrameUploadService : LifecycleService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        scheduleFrameUploadUseCase()
+//        scheduleFrameUploadUseCase()
     }
 }

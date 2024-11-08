@@ -71,7 +71,7 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
-    kapt ("com.google.dagger:hilt-compiler:2.52")
+    kapt("com.google.dagger:hilt-compiler:2.52")
     implementation(libs.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
 
@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson.converter)
     implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
 
     // Room
     implementation(libs.room.runtime)

@@ -7,6 +7,7 @@ import com.ono.imagestreaming.data.local.entity.toDomainModel
 import com.ono.imagestreaming.data.remote.ApiService
 import com.ono.imagestreaming.domain.model.FrameModel
 import com.ono.imagestreaming.domain.repository.FrameRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -26,6 +27,46 @@ class FrameRepositoryImpl @Inject constructor(
         frameDao.insertFrame(frame)
     }
 
+    /*override suspend fun uploadFrame(frameId: Int): Boolean {
+        val frame = getFrameById(frameId)
+        val requestBody = createRequestBody(frame.frameData)
+        val fileToUpload = MultipartBody.Part.createFormData(
+            "images",
+            "${System.currentTimeMillis()}.jpg",
+            requestBody
+        )
+
+        val maxRetries = 3
+        val retryDelay = 2000L
+
+        var attempt = 0
+        while (attempt < maxRetries) {
+            attempt++
+
+            try {
+                val response = apiService.uploadImage(fileToUpload)
+
+                if (response.isSuccessful) {
+                    Log.d(TAG, "uploadImage: Successfully uploaded image")
+                    updateFrameStatus("uploaded", frame.id)
+                    return true
+                } else {
+                    Log.e(TAG, "Image upload failed with response code: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Upload image failed: ${e.message}", e)
+            }
+
+            if (attempt < maxRetries) {
+                Log.d(TAG, "Retrying upload, attempt #$attempt after delay...")
+                delay(retryDelay)
+            }
+        }
+
+        return false
+    }*/
+
+
     override suspend fun uploadFrame(frameId: Int): Boolean {
         val frame = getFrameById(frameId)
         val requestBody = createRequestBody(frame.frameData)
@@ -39,18 +80,19 @@ class FrameRepositoryImpl @Inject constructor(
             val response = apiService.uploadImage(fileToUpload)
 
             if (response.isSuccessful) {
-                Log.d(TAG, "uploadImage: Successfully uploaded image")
+                Log.d(TAG, "uploadImage: Successfully uploaded frame ${response.body()?.link}")
                 updateFrameStatus("uploaded", frame.id)
                 true
             } else {
-                Log.e(TAG, "Image upload failed with response code: ${response.code()}")
+                Log.e(TAG, "Frame upload failed with response code: ${response.code()}")
                 false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Upload image failed: ${e.message}", e)
+            Log.e(TAG, "Upload frame failed: ${e.message}", e)
             false
         }
     }
+
 
     override suspend fun getFramesByStatus(frameStatus: String): List<FrameModel> {
         val frames = frameDao.getFramesByStatus(frameStatus)
@@ -66,7 +108,6 @@ class FrameRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateFrameStatus(status: String, id: Int): Boolean {
-        Log.d(TAG, "updateImageStatus: $status $id")
         return frameDao.updateFrameStatus(status, id) > 0
     }
 

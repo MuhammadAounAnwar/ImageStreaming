@@ -5,11 +5,13 @@ import com.ono.imagestreaming.data.local.dao.ImageDao
 import com.ono.imagestreaming.data.local.entity.ImageEntity
 import com.ono.imagestreaming.data.remote.ApiService
 import com.ono.imagestreaming.domain.repository.ImageRepository
-import com.ono.imagestreaming.util.createFileFromPath
 import kotlinx.coroutines.flow.Flow
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 import javax.inject.Inject
 
 class ImageRepositoryImpl @Inject constructor(
@@ -25,27 +27,11 @@ class ImageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun uploadImage(filePath: String): Boolean {
-        val file = filePath.createFileFromPath()
-
-        val extension = file.extension
-        if (extension.isEmpty()) {
-            Log.e(TAG, "Invalid file extension")
-            return false
-        }
-
-        val requestBody = file.readBytes().toRequestBody("*/*".toMediaTypeOrNull())
-
-        val fileToUpload = MultipartBody.Part.createFormData(
-            "images",
-            "${System.currentTimeMillis()}.$extension",
-            requestBody
-        )
-
         return try {
-            val response = apiService.uploadImage(fileToUpload)
+            val response = apiService.uploadImage(filePath.toMultiPart())
 
             if (response.isSuccessful) {
-                Log.d(TAG, "uploadImage: Successfully uploaded image")
+                Log.d(TAG, "uploadImage: Successfully uploaded image${response.body()?.link}")
                 updateImageStatus("uploaded", filePath)
                 true
             } else {
@@ -68,7 +54,32 @@ class ImageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateImageStatus(status: String, filePath: String): Boolean {
-        Log.d(TAG, "updateImageStatus: $status $filePath")
         return imageDao.updateImageStatus(status, filePath) > 0
+    }
+
+}
+
+fun String.toMultiPart(): MultipartBody.Part {
+    val file = File(this)  // Directly use the string as a file path
+
+    if (!file.exists() || !file.isFile) {
+        throw IllegalArgumentException("Invalid file path: $this")
+    }
+
+    val extension = file.extension.takeIf { it.isNotEmpty() } ?: "jpg"  // Default extension
+//    val requestBody = file.asRequestBody("multipart/form-data".toMediaType())
+    val requestBody = file.readBytes().toRequestBody("*/*".toMediaTypeOrNull())
+
+    // Use current time to create a unique file name for the multipart part
+    return MultipartBody.Part.createFormData(
+        "images",
+        "${System.currentTimeMillis()}.$extension",
+        requestBody
+    )
+}
+
+fun File.asRequestBody(mediaType: MediaType): RequestBody {
+    return this.inputStream().use { inputStream ->
+        inputStream.readBytes().toRequestBody(mediaType)
     }
 }

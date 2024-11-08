@@ -33,7 +33,7 @@ class FrameUploadWorker @AssistedInject constructor(
         setForegroundAsync(createForegroundInfo())
 
         val frames =
-            frameRepository.getFramesByStatus("pending") // Implement this in your repository
+            frameRepository.getFramesByStatus("pending")
 
         if (frames.isNotEmpty()) {
             try {
@@ -45,18 +45,19 @@ class FrameUploadWorker @AssistedInject constructor(
 
                     // Process the batch of images
                     val imageBatch = frames.drop(currentIndex).take(BATCH_SIZE)
+
                     val uploadJobs = imageBatch.map { frame ->
                         serviceScope.async {
                             val result = runCatching { uploadUseCase(frame.id) }
 
                             result.fold(
                                 onSuccess = { success ->
-                                    if (success) Log.d("UploadService", "Uploaded ${frame.id}")
-                                    else Log.e("UploadService", "Failed to upload ${frame.id}")
+                                    if (success) Log.d("FrameUploadWorker", "Uploaded ${frame.id}")
+                                    else Log.e("FrameUploadWorker", "Failed to upload ${frame.id}")
                                 },
                                 onFailure = { e ->
                                     Log.e(
-                                        "UploadService",
+                                        "FrameUploadWorker",
                                         "Error uploading ${frame.id}: ${e.message}"
                                     )
                                 }
@@ -64,25 +65,9 @@ class FrameUploadWorker @AssistedInject constructor(
                         }
                     }
 
-                    // Wait for all the jobs in the batch to complete before moving to the next batch
                     uploadJobs.awaitAll()
                     currentIndex += imageBatch.size
                 }
-                /**
-                 * For Sequential Upload
-                 */
-
-
-                /*frames.forEachIndexed { index, frame ->
-
-                    val response = uploadUseCase(frame.id) // Your server API call
-                    if (response) {
-                        frameRepository.updateFrameStatus("uploaded", frame.id)
-                    } else {
-                        Log.e("FrameUploadWorker", "Upload failed for frame: ${frame.id}")
-                        return Result.retry() // Retry in case of server failure
-                    }
-                }*/
                 return Result.success() // All frames uploaded successfully
 
 
