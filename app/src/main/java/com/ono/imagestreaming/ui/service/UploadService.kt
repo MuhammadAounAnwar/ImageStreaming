@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -36,6 +37,7 @@ class UploadService : LifecycleService() {
     @Inject
     lateinit var uploadImageUseCase: UploadImageUseCase
 
+    private val mutex = Mutex()
     private val imagePaths = mutableListOf<String>()
 
     private val _uploadState = MutableStateFlow(false)
@@ -97,24 +99,32 @@ class UploadService : LifecycleService() {
     }
 
     private fun togglePauseResume() {
-        _uploadState.value = !_uploadState.value
-        updateNotification(if (_uploadState.value) "Paused" else "Uploading...")
+        if (_uploadState.value) {
+            // If the upload is paused, resume it by releasing the mutex lock
+            _uploadState.value = false
+            mutex.unlock()
+            updateNotification("Uploading...")
+        } else {
+            // If the upload is not paused, pause it by locking the mutex
+            _uploadState.value = true
+            updateNotification("Paused")
+        }
     }
 
     private fun startUploading() {
         uploadJob = serviceScope.launch {
             isUploading = true
             var currentIndex = 0
+
             while (currentIndex < imagePaths.size) {
+                // Before processing the batch, check if the upload should be paused
                 if (_uploadState.value) {
-                    suspendCancellableCoroutine { cont ->
-                        cont.invokeOnCancellation {
-                            Log.d("UploadService", "Coroutine canceled")
-                        }
-                        cont.resume(Unit)
-                    }
+                    Log.d("UploadService", "Upload paused.")
+                    mutex.lock()  // Locking the mutex to pause the coroutine
+                    Log.d("UploadService", "Upload resumed.")
                 }
 
+                // Process the batch of images
                 val imageBatch = imagePaths.drop(currentIndex).take(BATCH_SIZE)
                 val uploadJobs = imageBatch.map { imagePath ->
                     async {
@@ -126,15 +136,13 @@ class UploadService : LifecycleService() {
                                 else Log.e("UploadService", "Failed to upload $imagePath")
                             },
                             onFailure = { e ->
-                                Log.e(
-                                    "UploadService",
-                                    "Error uploading $imagePath: ${e.message}"
-                                )
+                                Log.e("UploadService", "Error uploading $imagePath: ${e.message}")
                             }
                         )
                     }
                 }
 
+                // Wait for all the jobs in the batch to complete before moving to the next batch
                 uploadJobs.awaitAll()
                 currentIndex += imageBatch.size
             }
@@ -143,18 +151,22 @@ class UploadService : LifecycleService() {
             imagePaths.clear()
             stopSelf()
         }
+
         uploadJob?.invokeOnCompletion {
             if (it != null) {
                 Log.d("UploadService", "Upload process canceled or failed")
             } else {
                 Log.d("UploadService", "Upload completed successfully")
+                cancelUploading()
             }
         }
     }
 
-    fun cancelUploading() {
+
+    private fun cancelUploading() {
 //        serviceScope.coroutineContext.cancelChildren()
         uploadJob?.cancel()
+        stopSelf()
         Log.d("UploadService", "Upload canceled by user.")
     }
 

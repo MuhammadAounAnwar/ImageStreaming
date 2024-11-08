@@ -74,6 +74,7 @@ class ImageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateImageStatus(status: String, filePath: String): Boolean {
+        Log.d(TAG, "updateImageStatus: $status $filePath")
         return imageDao.updateImageStatus(status, filePath) > 0
     }
 
