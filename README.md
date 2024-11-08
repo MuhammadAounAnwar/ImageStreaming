@@ -35,6 +35,27 @@ The **presentation layer** is responsible for the UI components, interacting wit
 - **UI**: Includes camera view and image upload feedback.
 - **ViewModel**: Binds data and communicates with use cases to perform operations on the data layer.
 
+## **Components Used in the Project**
+
+### **1. Camera Integration**
+- **CameraX** library is used for camera functionality, enabling frame capture in real-time.
+
+### **2. API Call**
+- **Retrofit** is used to handle network requests and upload images to the server.
+
+### **3. Local Storage**
+- **Room** is used as the local database for storing image frames and other data on the device.
+
+### **4. Image Uploading**
+- **Foreground Service** is used to upload images to the server in the background while the app is running.
+- **WorkManager** is used for handling image uploads when the foreground service is killed, ensuring continuous uploading even when the app is not in the foreground.
+
+### **5. Dependency Injection**
+- **Hilt** is used for dependency injection to manage and provide instances of classes across the app, ensuring a modular and testable architecture.
+
+### **6. UI Components**
+- **Jetpack Compose** is used for building the user interface of the app in a declarative and modern way.
+
 ## **Functional Overview**
 
 1. **Permissions**: The app requests the necessary permissions for **camera** and **notifications** based on the Android version.
