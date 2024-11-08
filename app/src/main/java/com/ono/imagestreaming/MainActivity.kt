@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
 
         val viewModel: MainViewModel by viewModels()
 
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
         setContent {
             ImageStreamingTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

@@ -1,19 +1,25 @@
 package com.ono.imagestreaming.data.di
 
+import android.content.Context
+import androidx.work.WorkerFactory
 import com.ono.imagestreaming.data.local.dao.FrameDao
 import com.ono.imagestreaming.data.local.dao.ImageDao
 import com.ono.imagestreaming.data.remote.ApiService
 import com.ono.imagestreaming.data.repository.FrameRepositoryImpl
 import com.ono.imagestreaming.data.repository.ImageRepositoryImpl
+import com.ono.imagestreaming.data.scheduler.WorkManagerUploadScheduler
 import com.ono.imagestreaming.domain.repository.FrameRepository
 import com.ono.imagestreaming.domain.repository.ImageRepository
+import com.ono.imagestreaming.domain.scheduler.UploadScheduler
 import com.ono.imagestreaming.domain.usecase.FrameUploadUseCase
 import com.ono.imagestreaming.domain.usecase.FrameUploadUseCaseImpl
+import com.ono.imagestreaming.domain.usecase.ScheduleFrameUploadUseCase
 import com.ono.imagestreaming.domain.usecase.UploadImageUseCase
 import com.ono.imagestreaming.domain.usecase.UploadImageUseCaseImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -48,6 +54,28 @@ object AppModule {
     @Singleton
     fun provideFrameUploadUseCase(frameRepository: FrameRepository): FrameUploadUseCase {
         return FrameUploadUseCaseImpl(frameRepository)
+    }
+
+//    WorkManager
+
+    @Provides
+    fun provideUploadScheduler(@ApplicationContext context: Context): UploadScheduler {
+        return WorkManagerUploadScheduler(context)
+    }
+
+
+    @Provides
+    fun provideFileUploadSchedulerUseCase(uploadScheduler: UploadScheduler): ScheduleFrameUploadUseCase {
+        return ScheduleFrameUploadUseCase(uploadScheduler)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCustomWorkerFactory(
+        frameRepository: FrameRepository,
+        uploadUseCase: FrameUploadUseCase
+    ): WorkerFactory {
+        return CustomWorkerFactory(frameRepository, uploadUseCase)
     }
 
 }

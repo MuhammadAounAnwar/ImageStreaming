@@ -6,7 +6,7 @@ import javax.inject.Inject
 
 class FrameUploadUseCaseImpl @Inject constructor(private val repository: FrameRepository) :
     FrameUploadUseCase {
-    override suspend fun invoke(frame: FrameModel): Boolean {
-        return repository.uploadFrame(frame)
+    override suspend fun invoke(frameId: Int): Boolean {
+        return repository.uploadFrame(frameId)
     }
 }

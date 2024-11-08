@@ -30,8 +30,10 @@ class FrameRepositoryImpl @Inject constructor(
         frameDao.insertFrame(frame)
     }
 
-    override suspend fun uploadFrame(frame: FrameModel): Boolean {
+    override suspend fun uploadFrame(frameId: Int): Boolean {
 
+
+        val frame = getFrameById(frameId)
         // Prepare the file content for the request
         val requestBody = createRequestBody(frame.frameData)
 

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface FrameRepository {
     suspend fun saveFrameLocally(frame: ByteArray)
-    suspend fun uploadFrame(frame: FrameModel): Boolean
+    suspend fun uploadFrame(frameId: Int): Boolean
     suspend fun getFramesByStatus(frameStatus: String): List<FrameModel>
     suspend fun updateFrameStatus(status: String, id: Int): Boolean
     suspend fun getPendingFrames(): Flow<List<FrameEntity>>

@@ -10,11 +10,15 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.ono.imagestreaming.R
 import com.ono.imagestreaming.data.local.entity.FrameEntity
 import com.ono.imagestreaming.domain.model.FrameModel
 import com.ono.imagestreaming.domain.repository.FrameRepository
 import com.ono.imagestreaming.domain.usecase.FrameUploadUseCase
+import com.ono.imagestreaming.domain.usecase.ScheduleFrameUploadUseCase
+import com.ono.imagestreaming.ui.scheduler.FrameUploadWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,8 +46,11 @@ class FrameUploadService : LifecycleService() {
     @Inject
     lateinit var frameRepository: FrameRepository
 
+    @Inject
+    lateinit var scheduleFrameUploadUseCase: ScheduleFrameUploadUseCase
+
     private val mutex = Mutex()
-    private val frames = mutableListOf<FrameModel>()
+    private val frames = mutableListOf<Int>()
 
     private val _uploadState = MutableStateFlow(false)
     private val isUploadingState: StateFlow<Boolean> = _uploadState.asStateFlow()
@@ -53,9 +60,8 @@ class FrameUploadService : LifecycleService() {
 
     companion object {
         const val CHANNEL_ID = "UploadFramesServiceChannel"
-        const val NOTIFICATION_ID = 1
+        const val NOTIFICATION_ID = 2
         const val ACTION_START = "START"
-        const val ACTION_START_IDs = "START"
         const val ACTION_PAUSE_RESUME = "PAUSE_RESUME"
         const val ACTION_CANCEL = "CANCEL"
         const val BATCH_SIZE = 3
@@ -69,7 +75,7 @@ class FrameUploadService : LifecycleService() {
         }
 
         fun startService(context: Context, frames: List<Int>) {
-            val intent = Intent(context, UploadService::class.java).apply {
+            val intent = Intent(context, FrameUploadService::class.java).apply {
                 action = ACTION_START
                 putIntegerArrayListExtra("frames", ArrayList(frames))
             }
@@ -77,14 +83,14 @@ class FrameUploadService : LifecycleService() {
         }
 
         fun pauseOrResumeService(context: Context) {
-            val intent = Intent(context, UploadService::class.java).apply {
+            val intent = Intent(context, FrameUploadService::class.java).apply {
                 action = ACTION_PAUSE_RESUME
             }
             context.startService(intent)
         }
 
         fun cancelService(context: Context) {
-            val intent = Intent(context, UploadService::class.java).apply {
+            val intent = Intent(context, FrameUploadService::class.java).apply {
                 action = ACTION_CANCEL
             }
             context.startService(intent)
@@ -99,25 +105,16 @@ class FrameUploadService : LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         startForeground(NOTIFICATION_ID, createNotification("Uploading Frames..."))
+//        scheduleFrameUpload()
+
+//        scheduleFrameUploadUseCase.invoke()
+
         when (intent?.action) {
             ACTION_START -> {
-                val newPaths = intent.getParcelableArrayListExtra<FrameModel>("frames") ?: listOf()
-                frames.addAll(newPaths)
-                if (!isUploading) startUploading()
-            }
-
-            ACTION_START_IDs -> {
                 val frameIds = intent.getIntegerArrayListExtra("frames")
                 frameIds?.let { ids ->
-                    /*serviceScope.launch {
-                        val framesFromRepo = ids.mapNotNull { id ->
-                            frameRepository.getFrameById(id) // Fetch frames from the repository
-                        }
-                        frames.addAll(framesFromRepo) // Add to the local list
-                        if (!isUploading) startUploading() // Start uploading if not already
-                    }*/
-
-                    processFrames(ids)
+                    frames.addAll(ids) // Add to the local list
+                    if (!isUploading) startUploading()
                 }
             }
 
@@ -137,16 +134,6 @@ class FrameUploadService : LifecycleService() {
             // If the upload is not paused, pause it by locking the mutex
             _uploadState.value = true
             updateNotification("Paused")
-        }
-    }
-
-    private fun processFrames(frameIds: ArrayList<Int>) {
-        serviceScope.launch {
-            val framesFromRepo = frameIds.map { id ->
-                frameRepository.getFrameById(id) // Fetch frames from the repository
-            }
-            frames.addAll(framesFromRepo) // Add to the local list
-            if (!isUploading) startUploading() // Start uploading if not already
         }
     }
 
@@ -171,11 +158,11 @@ class FrameUploadService : LifecycleService() {
 
                         result.fold(
                             onSuccess = { success ->
-                                if (success) Log.d("UploadService", "Uploaded ${frame.id}")
-                                else Log.e("UploadService", "Failed to upload ${frame.id}")
+                                if (success) Log.d("UploadService", "Uploaded $frame")
+                                else Log.e("UploadService", "Failed to upload $frame")
                             },
                             onFailure = { e ->
-                                Log.e("UploadService", "Error uploading ${frame.id}: ${e.message}")
+                                Log.e("UploadService", "Error uploading ${frame}: ${e.message}")
                             }
                         )
                     }
@@ -252,5 +239,10 @@ class FrameUploadService : LifecycleService() {
         }
 
         return notificationBuilder.build()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scheduleFrameUploadUseCase()
     }
 }
