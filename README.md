@@ -1,3 +1,17 @@
+# Table of Contents
+
+1. [Introduction](#introduction)
+2. [Project Structure](#project-structure)
+3. [Components Used in the Project](#components-used-in-the-project)
+4. [Functional Overview](#functional-overview)
+5. [Key Features](#key-features)
+6. [Dependencies](#dependencies)
+7. [How It Works](#how-it-works)
+8. [file.io Integration](#fileio-integration)
+9. [Testing with Camera Images](#testing-with-camera-images)
+10. [Conclusion](#conclusion)
+
+
 # **Image Streamer App**
 
 This Android project follows the **MVVM (Model-View-ViewModel)** architecture and **Clean Architecture** principles to process and upload images efficiently. The app captures frames from the camera, processes them, stores them locally, and uploads them to a server in batches. The app also ensures that no frames are left behind using a **foreground service** and an **upload scheduler**.
