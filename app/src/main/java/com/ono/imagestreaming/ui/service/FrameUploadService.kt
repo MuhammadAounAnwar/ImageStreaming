@@ -234,6 +234,6 @@ class FrameUploadService : LifecycleService() {
 
     override fun onDestroy() {
         super.onDestroy()
-//        scheduleFrameUploadUseCase()
+        scheduleFrameUploadUseCase()
     }
 }
