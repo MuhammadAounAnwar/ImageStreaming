@@ -26,19 +26,15 @@ class ImageRepositoryImpl @Inject constructor(
 
     override suspend fun uploadImage(filePath: String): Boolean {
         val file = filePath.createFileFromPath()
-            ?: return false // Return false if the file is invalid or not found
 
-        // Get the file extension
         val extension = file.extension
         if (extension.isEmpty()) {
             Log.e(TAG, "Invalid file extension")
             return false
         }
 
-        // Prepare the file content for the request
         val requestBody = file.readBytes().toRequestBody("*/*".toMediaTypeOrNull())
 
-        // Create a multipart part with file data
         val fileToUpload = MultipartBody.Part.createFormData(
             "images",
             "${System.currentTimeMillis()}.$extension",
@@ -46,21 +42,19 @@ class ImageRepositoryImpl @Inject constructor(
         )
 
         return try {
-            // Call the API to upload the image
             val response = apiService.uploadImage(fileToUpload)
 
             if (response.isSuccessful) {
                 Log.d(TAG, "uploadImage: Successfully uploaded image")
                 updateImageStatus("uploaded", filePath)
-                true // Return true if upload is successful
+                true
             } else {
                 Log.e(TAG, "Image upload failed with response code: ${response.code()}")
-                false // Return false if response is not successful
+                false
             }
         } catch (e: Exception) {
-            // Log any errors during the upload process
             Log.e(TAG, "Upload image failed: ${e.message}", e)
-            false // Return false if an exception occurs
+            false
         }
     }
 
@@ -76,13 +70,5 @@ class ImageRepositoryImpl @Inject constructor(
     override suspend fun updateImageStatus(status: String, filePath: String): Boolean {
         Log.d(TAG, "updateImageStatus: $status $filePath")
         return imageDao.updateImageStatus(status, filePath) > 0
-    }
-
-
-    sealed class UploadState {
-        object Idle : UploadState()
-        object Uploading : UploadState()
-        data class Success(val message: String = "Upload Successful") : UploadState()
-        data class Error(val message: String) : UploadState()
     }
 }

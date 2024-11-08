@@ -3,10 +3,8 @@ package com.ono.imagestreaming.ui.imagestream
 import android.content.Context
 import android.util.Log
 import androidx.camera.core.ImageProxy
-import androidx.hilt.work.HiltWorkerFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ono.imagestreaming.data.local.entity.getFramesIds
 import com.ono.imagestreaming.data.local.entity.toDomainModelIds
 import com.ono.imagestreaming.domain.model.FrameModel
 import com.ono.imagestreaming.domain.repository.FrameRepository
@@ -83,13 +81,6 @@ class ImageStreamViewModel @Inject constructor(
             Log.d(TAG, "Pending Frames: ${pendingFrames.size}")
             val uploadedFrames = repository.getFramesByStatus("uploaded")
             Log.d(TAG, "Uploaded Frames: ${uploadedFrames.size}")
-
-            /*if (pendingFrames.isNotEmpty()) {
-                context.isInternetAvailable {
-                    context.startUploadService(pendingFrames.getFramesIds())
-                }
-            }*/
-
         }
     }
 

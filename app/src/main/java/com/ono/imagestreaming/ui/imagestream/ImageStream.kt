@@ -96,10 +96,17 @@ fun ImageStream(viewModel: ImageStreamViewModel = hiltViewModel()) {
             Button(
                 onClick = {
                     isCapturing.value = !isCapturing.value
-                },
-                modifier = Modifier.fillMaxWidth()
+                }
             ) {
-                Text(if (isCapturing.value) "Stop Capture" else "Start Capture")
+                Text(if (isCapturing.value) "Stop" else "Start")
+            }
+
+            Button(onClick = { context.togglePauseResume() }) {
+                Text("Pause/Resume")
+            }
+
+            Button(onClick = { context.cancelUploadService() }) {
+                Text("Cancel")
             }
         }
     }

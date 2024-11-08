@@ -105,9 +105,6 @@ class FrameUploadService : LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         startForeground(NOTIFICATION_ID, createNotification("Uploading Frames..."))
-//        scheduleFrameUpload()
-
-//        scheduleFrameUploadUseCase.invoke()
 
         when (intent?.action) {
             ACTION_START -> {
@@ -126,12 +123,10 @@ class FrameUploadService : LifecycleService() {
 
     private fun togglePauseResume() {
         if (_uploadState.value) {
-            // If the upload is paused, resume it by releasing the mutex lock
             _uploadState.value = false
             mutex.unlock()
             updateNotification("Uploading...")
         } else {
-            // If the upload is not paused, pause it by locking the mutex
             _uploadState.value = true
             updateNotification("Paused")
         }
@@ -143,14 +138,12 @@ class FrameUploadService : LifecycleService() {
             var currentIndex = 0
 
             while (currentIndex < frames.size) {
-                // Before processing the batch, check if the upload should be paused
                 if (_uploadState.value) {
                     Log.d("UploadService", "Upload paused.")
-                    mutex.lock()  // Locking the mutex to pause the coroutine
+                    mutex.lock()
                     Log.d("UploadService", "Upload resumed.")
                 }
 
-                // Process the batch of images
                 val imageBatch = frames.drop(currentIndex).take(BATCH_SIZE)
                 val uploadJobs = imageBatch.map { frame ->
                     async {
@@ -168,7 +161,6 @@ class FrameUploadService : LifecycleService() {
                     }
                 }
 
-                // Wait for all the jobs in the batch to complete before moving to the next batch
                 uploadJobs.awaitAll()
                 currentIndex += imageBatch.size
             }

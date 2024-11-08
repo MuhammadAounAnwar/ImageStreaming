@@ -101,7 +101,5 @@ fun MainScreen(modifier: Modifier, viewModel: MainViewModel = hiltViewModel()) {
                 Text("Cancel")
             }
         }
-
-
     }
 }
